@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import Search from './components/Search.jsx'
+import Spinner from './components/Spinner.jsx'
+import MovieCard from './components/MovieCard.jsx'
 
 const API_BASE_URL = import.meta.env.VITE_TMDB_API_URL
 
@@ -43,7 +45,7 @@ const App = () => {
         setErrorMessage('Error fetching movies. Please try again later.')
         setMovies([]);
       } finally {
-        setIsLoading(true);
+        setIsLoading(false);
       }
     }
   
@@ -61,16 +63,16 @@ const App = () => {
         </header>
         
         <section className='all-movies'>
-          <h2>All Movies</h2>
+          <h2 className='mt-[40px]'>All Movies</h2>
 
           {isLoading ? 
-          <p className='text-white'>Loading...</p>
+          <Spinner />
           : errorMessage ? 
           <p className='text-red-500'>{errorMessage}</p>
           : (
             <ul>
               {movies.map((movie) => (
-                <li className="text-white" key={movie.id}>{movie.title}</li>
+                <MovieCard key={movie.id} movie={movie} />
               ))}
             </ul>
           )}
