@@ -4,17 +4,17 @@ import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
 import { updateSearchCount, getTrendingMovies } from './appwrite.js'
 
-const API_BASE_URL = import.meta.env.VITE_TMDB_API_URL
+const API_BASE_URL = import.meta.env.VITE_TMDB_API_URL || 'https://api.themoviedb.org/3'
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 
-const API_OPTIONS = {
+const getApiOptions = () => ({
   method: 'GET',
   headers: {
     accept: 'application/json',
-    Authorization: `Bearer ${API_KEY}`
-  }
-}
+    Authorization: `Bearer ${API_KEY}`,
+  },
+})
 
 const App = () => {
 
@@ -39,34 +39,40 @@ const App = () => {
   }, [searchTerm]);
 
   const fetchMovies = async (query = '') => {
-    setIsLoading(true);
-    setErrorMessage('');
-      try {
-        const trimmedQuery = query.trim();
-        const endpoint = trimmedQuery
-          ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(trimmedQuery)}`
-          : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
-        const response = await fetch(endpoint, API_OPTIONS);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch movies');
-        }
-
-        const data = await response.json();
-        setMovies(data.results || []);
-
-        if (trimmedQuery && data.results.length > 0) {
-          await updateSearchCount(trimmedQuery, data.results[0])
-        }
-      } catch (error) {
-
-        console.error('Error fetching movies:', error)
-        setErrorMessage('Error fetching movies. Please try again later.')
-        setMovies([]);
-      } finally {
-        setIsLoading(false);
-      }
+    if (!API_KEY) {
+      setErrorMessage(
+        'TMDB API key is missing. Add VITE_TMDB_API_KEY in Vercel environment variables and redeploy.'
+      )
+      return
     }
+
+    setIsLoading(true)
+    setErrorMessage('')
+    try {
+      const trimmedQuery = query.trim()
+      const endpoint = trimmedQuery
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(trimmedQuery)}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
+      const response = await fetch(endpoint, getApiOptions())
+
+      if (!response.ok) {
+        throw new Error(`TMDB request failed (${response.status})`)
+      }
+
+      const data = await response.json()
+      setMovies(data.results || [])
+
+      if (trimmedQuery && data.results.length > 0) {
+        await updateSearchCount(trimmedQuery, data.results[0])
+      }
+    } catch (error) {
+      console.error('Error fetching movies:', error)
+      setErrorMessage('Error fetching movies. Please try again later.')
+      setMovies([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const loadTrendingMovies = async () => {
     try {
