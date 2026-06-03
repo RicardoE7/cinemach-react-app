@@ -18,7 +18,7 @@ const getApiOptions = () => ({
 
 const App = () => {
 
-  const [searchTerm, setSearchTerm ] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [movies, setMovies] = useState([]);
 
@@ -117,7 +117,7 @@ const App = () => {
 
 
         <section className='all-movies'>
-          <h2>All Movies</h2>
+          <h2>Popular</h2>
 
           {isLoading ? 
           <Spinner />
