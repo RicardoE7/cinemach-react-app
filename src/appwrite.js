@@ -5,25 +5,39 @@ const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID
 const ENDPOINT = import.meta.env.VITE_APPWRITE_ENDPOINT
 
-const client = new Client()
-client.setEndpoint(ENDPOINT).setProject(PROJECT_ID)
+let database = null
 
-const database = new Databases(client)
+const getDatabase = () => {
+  if (database) return database
+
+  if (!ENDPOINT || !PROJECT_ID || !DATABASE_ID || !COLLECTION_ID) {
+    console.warn('Appwrite env vars missing — search analytics disabled')
+    return null
+  }
+
+  const client = new Client()
+  client.setEndpoint(ENDPOINT).setProject(PROJECT_ID)
+  database = new Databases(client)
+  return database
+}
 
 export const updateSearchCount = async (searchTerm, movie) => {
+  const db = getDatabase()
+  if (!db) return
+
   try {
-    const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
+    const result = await db.listDocuments(DATABASE_ID, COLLECTION_ID, [
       Query.equal('searchTerm', searchTerm),
     ])
 
     if (result.documents.length > 0) {
       const doc = result.documents[0]
 
-      await database.updateDocument(DATABASE_ID, COLLECTION_ID, doc.$id, {
+      await db.updateDocument(DATABASE_ID, COLLECTION_ID, doc.$id, {
         count: doc.count + 1,
       })
     } else {
-      await database.createDocument(DATABASE_ID, COLLECTION_ID, ID.unique(), {
+      await db.createDocument(DATABASE_ID, COLLECTION_ID, ID.unique(), {
         searchTerm,
         count: 1,
         movie_id: movie.id,
@@ -38,8 +52,11 @@ export const updateSearchCount = async (searchTerm, movie) => {
 }
 
 export const getTrendingMovies = async () => {
+  const db = getDatabase()
+  if (!db) return []
+
   try {
-    const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
+    const result = await db.listDocuments(DATABASE_ID, COLLECTION_ID, [
       Query.orderDesc('count'),
       Query.limit(5),
     ])

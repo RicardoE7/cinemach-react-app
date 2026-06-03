@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import Search from './components/Search.jsx'
 import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
-import { updateSearchCount } from './appwrite.js'
-import { getTrendingMovies } from './appwrite.js'
+import { updateSearchCount, getTrendingMovies } from './appwrite.js'
 
 const API_BASE_URL = import.meta.env.VITE_TMDB_API_URL
 
@@ -56,8 +55,8 @@ const App = () => {
         const data = await response.json();
         setMovies(data.results || []);
 
-        if (query && data.results.length > 0) {
-          await updateSearchCount(query, data.results[0]);
+        if (trimmedQuery && data.results.length > 0) {
+          await updateSearchCount(trimmedQuery, data.results[0])
         }
       } catch (error) {
 
@@ -100,9 +99,9 @@ const App = () => {
             <h2>Trending Movies</h2>
             <ul>
               {trendingMovies.map((movie, index) => (
-                <li key={movie.movie_id}>
+                <li key={movie.$id}>
                   <p>{index + 1}</p>
-                  <img src={movie.poster_url} alt={movie.title} />
+                  <img src={movie.poster_url} alt={movie.searchTerm} />
                 </li>
               ))}
             </ul>
