@@ -18,7 +18,7 @@ const getApiOptions = () => ({
 
 const App = () => {
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm ] = useState('');
 
   const [movies, setMovies] = useState([]);
 
